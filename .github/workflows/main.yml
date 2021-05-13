@@ -1,0 +1,29 @@
+on:
+  schedule:
+    - cron:  '* * * * *'
+    # scheduled at 07:00 every Monday and Thursday
+  workflow_dispatch:
+
+jobs:
+  sync_with_upstream:
+    runs-on: ubuntu-latest
+    name: Sync master with upstream latest
+
+    steps:
+    - name: Checkout master
+      uses: actions/checkout@v2
+      with:
+        ref: master
+        
+    - name: Fork Sync With Upstream
+      # You may pin to the exact commit or the version.
+      # uses: aormsby/Fork-Sync-With-Upstream-action@ac3bad798688ddf124b7d83a8e4fced59a1a83a7
+      uses: aormsby/Fork-Sync-With-Upstream-action@v2.3
+      with:
+        # Upstream repository, e.g. => aormsby/Fork-Sync-With-Upstream-action
+        upstream_repository: prebid/prebid-server
+        # Branch to sync from, e.g. => main, master, dev
+        upstream_branch: master
+        # Branch to push to, e.g. => main, master, prod
+        target_branch: master
+        git_push_args: --tags
