@@ -6,6 +6,7 @@ import (
 	"github.com/prebid/prebid-server/analytics"
 	"github.com/prebid/prebid-server/analytics/clients"
 	"github.com/prebid/prebid-server/analytics/filesystem"
+	"github.com/prebid/prebid-server/analytics/ix"
 	"github.com/prebid/prebid-server/analytics/pubstack"
 	"github.com/prebid/prebid-server/config"
 )
@@ -35,6 +36,14 @@ func NewPBSAnalytics(analytics *config.Analytics) analytics.PBSAnalyticsModule {
 			modules = append(modules, pubstackModule)
 		} else {
 			glog.Errorf("Could not initialize PubstackModule: %v", err)
+		}
+	}
+
+	if analytics.IX.Enabled {
+		if mod, err := ix.NewIXModule(analytics.IX); err == nil {
+			modules = append(modules, mod)
+		} else {
+			glog.Fatalf("Could not initialize ix module for file %v :%v", analytics.IX.LogOptions.File, err)
 		}
 	}
 	return modules

@@ -10,6 +10,7 @@ import (
 	"strings"
 	"time"
 
+	chasexLogger "github.com/chasex/glog"
 	"github.com/golang/glog"
 	"github.com/prebid/openrtb/v17/openrtb2"
 	"github.com/spf13/viper"
@@ -425,6 +426,7 @@ type LMT struct {
 type Analytics struct {
 	File     FileLogs `mapstructure:"file"`
 	Pubstack Pubstack `mapstructure:"pubstack"`
+	IX       IX       `mapstructure:"ix"`
 }
 
 type CurrencyConverter struct {
@@ -443,6 +445,19 @@ func (cfg *CurrencyConverter) validate(errs []error) []error {
 // FileLogs Corresponding config for FileLogger as a PBS Analytics Module
 type FileLogs struct {
 	Filename string `mapstructure:"filename"`
+}
+
+//IXEvents Events Object Expected Structure
+type IXEvents struct {
+	Win bool `mapstructure:"win"`
+	Imp bool `mapstructure:"imp"`
+}
+
+//Expected Configuration Structure for IX Module
+type IX struct {
+	Enabled    bool                    `mapstructure:"enabled"`
+	Events     IXEvents                `mapstructure:"events"`
+	LogOptions chasexLogger.LogOptions `mapstructure:"log_options"`
 }
 
 type Pubstack struct {
@@ -951,6 +966,11 @@ func SetupViper(v *viper.Viper, filename string, bidderInfos BidderInfos) {
 	v.SetDefault("analytics.pubstack.buffers.size", "2MB")
 	v.SetDefault("analytics.pubstack.buffers.count", 100)
 	v.SetDefault("analytics.pubstack.buffers.timeout", "900s")
+	v.SetDefault("analytics.ix.log_options.file", "")
+	v.SetDefault("analytics.ix.log_options.flag", chasexLogger.LstdNull)
+	v.SetDefault("analytics.ix.log_options.level", chasexLogger.Ldebug)
+	v.SetDefault("analytics.ix.log_options.mode", chasexLogger.R_Day)
+	v.SetDefault("analytics.ix.log_options.maxsize", 0)
 	v.SetDefault("amp_timeout_adjustment_ms", 0)
 	v.BindEnv("gdpr.default_value")
 	v.SetDefault("gdpr.enabled", true)
