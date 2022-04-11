@@ -12,6 +12,7 @@ import (
 	"github.com/julienschmidt/httprouter"
 	"github.com/prebid/prebid-server/config"
 	"github.com/prebid/prebid-server/stored_requests"
+	"github.com/prebid/prebid-server/stored_requests/backends/aerospike_fetcher"
 	"github.com/prebid/prebid-server/stored_requests/backends/db_fetcher"
 	"github.com/prebid/prebid-server/stored_requests/backends/empty_fetcher"
 	"github.com/prebid/prebid-server/stored_requests/backends/file_fetcher"
@@ -23,6 +24,8 @@ import (
 	httpEvents "github.com/prebid/prebid-server/stored_requests/events/http"
 	postgresEvents "github.com/prebid/prebid-server/stored_requests/events/postgres"
 	"github.com/prebid/prebid-server/util/task"
+	"gitlab.indexexchange.com/exchange-node/rules-lib/aerospike"
+	"gitlab.indexexchange.com/exchange-node/rules-lib/providers"
 )
 
 // This gets set to the connection string used when a database connection is made. We only support a single
@@ -42,7 +45,7 @@ type dbConnection struct {
 //
 // As a side-effect, it will add some endpoints to the router if the config calls for it.
 // In the future we should look for ways to simplify this so that it's not doing two things.
-func CreateStoredRequests(cfg *config.StoredRequests, metricsEngine metrics.MetricsEngine, client *http.Client, router *httprouter.Router, dbc *dbConnection) (fetcher stored_requests.AllFetcher, shutdown func()) {
+func CreateStoredRequests(cfg *config.StoredRequests, metricsEngine metrics.MetricsEngine, client *http.Client, router *httprouter.Router, dbc *dbConnection, aerospike *aerospike.Client) (fetcher stored_requests.AllFetcher, shutdown func()) {
 	// Create database connection if given options for one
 	if cfg.Postgres.ConnectionInfo.Database != "" {
 		conn := cfg.Postgres.ConnectionInfo.ConnString()
@@ -66,7 +69,14 @@ func CreateStoredRequests(cfg *config.StoredRequests, metricsEngine metrics.Metr
 	}
 
 	eventProducers := newEventProducers(cfg, client, dbc.db, metricsEngine, router)
-	fetcher = newFetcher(cfg, client, dbc.db)
+
+	var providers *aerospike_fetcher.AerospikeProviders
+	if cfg.Aerospike.Enabled {
+		providers = newAerospikeProviders(aerospike, cfg.DataType())
+		fetcher = newFetcher(cfg, client, dbc.db, providers)
+	} else {
+		fetcher = newFetcher(cfg, client, dbc.db, providers)
+	}
 
 	var shutdown1 func()
 
@@ -107,7 +117,7 @@ func CreateStoredRequests(cfg *config.StoredRequests, metricsEngine metrics.Metr
 //
 // As a side-effect, it will add some endpoints to the router if the config calls for it.
 // In the future we should look for ways to simplify this so that it's not doing two things.
-func NewStoredRequests(cfg *config.Configuration, metricsEngine metrics.MetricsEngine, client *http.Client, router *httprouter.Router) (shutdown func(),
+func NewStoredRequests(cfg *config.Configuration, metricsEngine metrics.MetricsEngine, client *http.Client, router *httprouter.Router, aerospike *aerospike.Client) (shutdown func(),
 	fetcher stored_requests.Fetcher,
 	ampFetcher stored_requests.Fetcher,
 	accountsFetcher stored_requests.AccountFetcher,
@@ -117,13 +127,12 @@ func NewStoredRequests(cfg *config.Configuration, metricsEngine metrics.MetricsE
 
 	var dbc dbConnection
 
-	fetcher1, shutdown1 := CreateStoredRequests(&cfg.StoredRequests, metricsEngine, client, router, &dbc)
-	fetcher2, shutdown2 := CreateStoredRequests(&cfg.StoredRequestsAMP, metricsEngine, client, router, &dbc)
-	fetcher3, shutdown3 := CreateStoredRequests(&cfg.CategoryMapping, metricsEngine, client, router, &dbc)
-	fetcher4, shutdown4 := CreateStoredRequests(&cfg.StoredVideo, metricsEngine, client, router, &dbc)
-	fetcher5, shutdown5 := CreateStoredRequests(&cfg.Accounts, metricsEngine, client, router, &dbc)
-	fetcher6, shutdown6 := CreateStoredRequests(&cfg.StoredResponses, metricsEngine, client, router, &dbc)
-
+	fetcher1, shutdown1 := CreateStoredRequests(&cfg.StoredRequests, metricsEngine, client, router, &dbc, aerospike)
+	fetcher2, shutdown2 := CreateStoredRequests(&cfg.StoredRequestsAMP, metricsEngine, client, router, &dbc, aerospike)
+	fetcher3, shutdown3 := CreateStoredRequests(&cfg.CategoryMapping, metricsEngine, client, router, &dbc, aerospike)
+	fetcher4, shutdown4 := CreateStoredRequests(&cfg.StoredVideo, metricsEngine, client, router, &dbc, aerospike)
+	fetcher5, shutdown5 := CreateStoredRequests(&cfg.Accounts, metricsEngine, client, router, &dbc, aerospike)
+	fetcher6, shutdown6 := CreateStoredRequests(&cfg.StoredResponses, metricsEngine, client, router, &dbc, aerospike)
 	fetcher = fetcher1.(stored_requests.Fetcher)
 	ampFetcher = fetcher2.(stored_requests.Fetcher)
 	categoriesFetcher = fetcher3.(stored_requests.CategoryFetcher)
@@ -159,7 +168,7 @@ func addListeners(cache stored_requests.Cache, eventProducers []events.EventProd
 	}
 }
 
-func newFetcher(cfg *config.StoredRequests, client *http.Client, db *sql.DB) (fetcher stored_requests.AllFetcher) {
+func newFetcher(cfg *config.StoredRequests, client *http.Client, db *sql.DB, aerospike *aerospike_fetcher.AerospikeProviders) (fetcher stored_requests.AllFetcher) {
 	idList := make(stored_requests.MultiFetcher, 0, 3)
 
 	if cfg.Files.Enabled {
@@ -176,6 +185,10 @@ func newFetcher(cfg *config.StoredRequests, client *http.Client, db *sql.DB) (fe
 	if cfg.HTTP.Endpoint != "" {
 		glog.Infof("Loading Stored %s data via HTTP. endpoint=%s", cfg.DataType(), cfg.HTTP.Endpoint)
 		idList = append(idList, http_fetcher.NewFetcher(client, cfg.HTTP.Endpoint))
+	}
+	if cfg.Aerospike.Enabled && aerospike != nil {
+		glog.Infof("Loading Stored %s data via aerospike", cfg.DataType())
+		idList = append(idList, aerospike_fetcher.NewFetcher(aerospike, cfg.DataType()))
 	}
 
 	fetcher = consolidate(cfg.DataType(), idList)
@@ -262,6 +275,51 @@ func newPostgresDB(dataType config.DataType, cfg config.PostgresConnection) *sql
 	}
 
 	return db
+}
+
+func newAerospikeProviders(asc *aerospike.Client, datatype config.DataType) *aerospike_fetcher.AerospikeProviders {
+	var storedRequestProvider *providers.StoredRequestCachedProvider
+	var storedImpressionProvider *providers.StoredImpressionCachedProvider
+	var storedAccountProvider *providers.StoredAccountCachedProvider
+	var primaryAdServerCategoryMappingProvider *providers.PrimaryAdServerCategoryMappingCachedProvider
+	var err error
+
+	if (datatype == config.RequestDataType || datatype == config.VideoDataType) && asc != nil {
+		storedRequestProvider, err = providers.NewStoredRequestCachedProvider(asc)
+
+		if err != nil {
+			glog.Infof("Failed to get prebid stored requests cached provider: %v", err)
+		}
+
+		storedImpressionProvider, err = providers.NewStoredImpressionCachedProvider(asc)
+
+		if err != nil {
+			glog.Infof("Failed to get prebid stored impressions cached provider: %v", err)
+		}
+	}
+
+	if datatype == config.AccountDataType && asc != nil {
+		storedAccountProvider, err = providers.NewStoredAccountCachedProvider(asc)
+
+		if err != nil {
+			glog.Infof("Failed to get prebid stored account cached provider: %v", err)
+		}
+	}
+
+	if datatype == config.CategoryDataType && asc != nil {
+		primaryAdServerCategoryMappingProvider, err = providers.NewPrimaryAdServerCategoryMappingCachedProvider(asc)
+
+		if err != nil {
+			glog.Infof("Failed to get prebid ad server category mapping cached provider: %v", err)
+		}
+	}
+
+	return &aerospike_fetcher.AerospikeProviders{
+		StoredRequestProvider:                  storedRequestProvider,
+		StoredImpressionProvider:               storedImpressionProvider,
+		StoredAccountProvider:                  storedAccountProvider,
+		PrimaryAdServerCategoryMappingProvider: primaryAdServerCategoryMappingProvider,
+	}
 }
 
 // consolidate returns a single Fetcher from an array of fetchers of any size.

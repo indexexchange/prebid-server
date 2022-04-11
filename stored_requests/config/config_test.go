@@ -108,7 +108,7 @@ func TestNewEmptyFetcher(t *testing.T) {
 	}
 
 	for _, test := range testCases {
-		fetcher := newFetcher(test.config, nil, &sql.DB{})
+		fetcher := newFetcher(test.config, nil, &sql.DB{}, nil)
 		assert.NotNil(t, fetcher, "The fetcher should be non-nil.")
 		if test.emptyFetcher {
 			assert.Equal(t, empty_fetcher.EmptyFetcher{}, fetcher, "Empty fetcher should be returned")
@@ -123,7 +123,7 @@ func TestNewHTTPFetcher(t *testing.T) {
 		HTTP: config.HTTPFetcherConfig{
 			Endpoint: "stored-requests.prebid.com",
 		},
-	}, nil, nil)
+	}, nil, nil, nil)
 	if httpFetcher, ok := fetcher.(*http_fetcher.HttpFetcher); ok {
 		if httpFetcher.Endpoint != "stored-requests.prebid.com?" {
 			t.Errorf("The HTTP fetcher is using the wrong endpoint. Expected %s, got %s", "stored-requests.prebid.com?", httpFetcher.Endpoint)

@@ -37,6 +37,7 @@ import (
 	"github.com/julienschmidt/httprouter"
 	_ "github.com/lib/pq"
 	"github.com/rs/cors"
+	"gitlab.indexexchange.com/exchange-node/rules-lib/aerospike"
 )
 
 // NewJsonDirectoryServer is used to serve .json files from a directory as a single blob. For example,
@@ -167,7 +168,22 @@ func New(cfg *config.Configuration, rateConvertor *currency.RateConverter) (r *R
 
 	// Metrics engine
 	r.MetricsEngine = metricsConf.NewMetricsEngine(cfg, openrtb_ext.CoreBidderNames(), syncerKeys)
-	shutdown, fetcher, ampFetcher, accounts, categoriesFetcher, videoFetcher, storedRespFetcher := storedRequestsConf.NewStoredRequests(cfg, r.MetricsEngine, generalHttpClient, r.Router)
+
+	// Aerospike client
+	asConfig := aerospike.Config{
+		SeedHosts: cfg.Aerospike.Hosts,
+		Port:      cfg.Aerospike.Port,
+		Namespace: cfg.Aerospike.Namespace,
+		User:      cfg.Aerospike.User,
+		Password:  cfg.Aerospike.Password,
+	}
+	aerospikeClient, err := aerospike.NewClient(asConfig)
+
+	if err != nil {
+		glog.Infof("Failed to create aerospike client: %v", err)
+	}
+
+	shutdown, fetcher, ampFetcher, accounts, categoriesFetcher, videoFetcher, storedRespFetcher := storedRequestsConf.NewStoredRequests(cfg, r.MetricsEngine, generalHttpClient, r.Router, aerospikeClient)
 	// todo(zachbadgett): better shutdown
 	r.Shutdown = shutdown
 

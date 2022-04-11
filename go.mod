@@ -2,6 +2,10 @@ module github.com/prebid/prebid-server
 
 go 1.19
 
+replace gitlab.indexexchange.com/exchange-node/third-party/protobuf-go/protobuf => gitlab.indexexchange.com/exchange-node/third-party/protobuf-go.git v1.25.4
+
+replace gitlab.indexexchange.com/exchange-node/rules-lib => gitlab.indexexchange.com/exchange-node/rules-lib v1.280.0
+
 require (
 	github.com/DATA-DOG/go-sqlmock v1.5.0
 	github.com/IABTechLab/adscert v0.34.0
@@ -14,6 +18,8 @@ require (
 	github.com/docker/go-units v0.4.0
 	github.com/gofrs/uuid v4.2.0+incompatible
 	github.com/golang/glog v1.0.0
+	github.com/golang/protobuf v1.5.2
+	github.com/influxdata/influxdb1-client v0.0.0-20200827194710-b269163b24ab // indirect
 	github.com/julienschmidt/httprouter v1.3.0
 	github.com/lib/pq v1.10.4
 	github.com/mitchellh/copystructure v1.2.0

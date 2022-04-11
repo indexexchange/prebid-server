@@ -10,11 +10,23 @@ RUN mkdir -p /app/prebid-server/
 WORKDIR /app/prebid-server/
 ENV GOROOT=/usr/local/go
 ENV PATH=$GOROOT/bin:$PATH
-ENV GOPROXY="https://proxy.golang.org"
+ENV GOPROXY="http://nexus3.indexexchange.com/repository/go-mod-group,https://proxy.golang.org,direct"
+ENV GONOPROXY="*.indexexchange.com"
+ENV GOPRIVATE="*.indexexchange.com"
+
 RUN apt-get update && \
     apt-get install -y git && \
     apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
-ENV CGO_ENABLED 0
+
+RUN set -xe; \
+	mkdir -p ~/.ssh \
+	&& wget http://build-resources.indexexchange.com:8000/self-signed-certs/containerization_read_only/id_rsa -O /root/.ssh/id_rsa \
+	&& wget http://build-resources.indexexchange.com:8000/self-signed-certs/containerization_read_only/id_rsa.pub -O /root/.ssh/id_rsa.pub \
+	&& chmod -R 600 /root/.ssh \
+	&& printf "Host *\n\tStrictHostKeyChecking no\n" >> /root/.ssh/config \
+	&& git config --global url."git@gitlab.indexexchange.com:".insteadOf "https://gitlab.indexexchange.com/"
+
+ENV CGO_ENABLED=0
 COPY ./ ./
 RUN go mod tidy
 RUN go mod vendor

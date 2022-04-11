@@ -73,6 +73,8 @@ type StoredRequests struct {
 	// HTTPEvents configures an instance of stored_requests/events/http/http.go.
 	// If non-nil, the server will use those endpoints to populate and update the cache.
 	HTTPEvents HTTPEventsConfig `mapstructure:"http_events"`
+	//Aerospike configuration for aerospike fetcher
+	Aerospike AerospikeConnection `mapstructure:"aerospike"`
 }
 
 // HTTPEventsConfig configures stored_requests/events/http/http.go
@@ -473,4 +475,27 @@ func (cfg *InMemoryCache) validate(dataType DataType, errs []error) []error {
 		errs = append(errs, fmt.Errorf("%s: in_memory_cache.type %s is invalid", section, cfg.Type))
 	}
 	return errs
+}
+
+// Aerospike Connection Params
+type AerospikeConnection struct {
+	// Enabled should be true if Stored Requests should be loaded from aerospike.
+	Enabled   bool     `mapstructure:"enabled"`
+	Hosts     []string `mapstructure:"hosts"`
+	Port      int      `mapstructure:"port"`
+	User      string   `mapstructure:"user"`
+	Password  string   `mapstructure:"password"`
+	Namespace string   `mapstructure:"namespace"`
+}
+
+func (cfg *AerospikeConnection) validate() error {
+	if len(cfg.Hosts) < 1 {
+		return fmt.Errorf("Cannot connect to empty Aerospike host(s)")
+	}
+
+	if cfg.Port <= 0 {
+		return fmt.Errorf("Cannot connect to Aerospike host at port %d", cfg.Port)
+	}
+
+	return nil
 }
