@@ -480,12 +480,14 @@ func (cfg *InMemoryCache) validate(dataType DataType, errs []error) []error {
 // Aerospike Connection Params
 type AerospikeConnection struct {
 	// Enabled should be true if Stored Requests should be loaded from aerospike.
-	Enabled   bool     `mapstructure:"enabled"`
-	Hosts     []string `mapstructure:"hosts"`
-	Port      int      `mapstructure:"port"`
-	User      string   `mapstructure:"user"`
-	Password  string   `mapstructure:"password"`
-	Namespace string   `mapstructure:"namespace"`
+	Enabled        bool     `mapstructure:"enabled"`
+	Hosts          []string `mapstructure:"hosts"`
+	Port           int      `mapstructure:"port"`
+	User           string   `mapstructure:"user"`
+	Password       string   `mapstructure:"password"`
+	Namespace      string   `mapstructure:"namespace"`
+	ConnectRetries int      `mapstructure:"retries"`
+	Timeout        int      `mapstructure:"timeout"`
 }
 
 func (cfg *AerospikeConnection) validate() error {

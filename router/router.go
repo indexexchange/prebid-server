@@ -171,11 +171,13 @@ func New(cfg *config.Configuration, rateConvertor *currency.RateConverter) (r *R
 
 	// Aerospike client
 	asConfig := aerospike.Config{
-		SeedHosts: cfg.Aerospike.Hosts,
-		Port:      cfg.Aerospike.Port,
-		Namespace: cfg.Aerospike.Namespace,
-		User:      cfg.Aerospike.User,
-		Password:  cfg.Aerospike.Password,
+		SeedHosts:      cfg.Aerospike.Hosts,
+		Port:           cfg.Aerospike.Port,
+		Namespace:      cfg.Aerospike.Namespace,
+		User:           cfg.Aerospike.User,
+		Password:       cfg.Aerospike.Password,
+		ConnectRetries: cfg.Aerospike.ConnectRetries,
+		Timeout:        cfg.Aerospike.Timeout,
 	}
 	aerospikeClient, err := aerospike.NewClient(asConfig)
 
