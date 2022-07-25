@@ -56,19 +56,13 @@ func (fetcher *aerospikeFetcher) FetchRequests(ctx context.Context, requestIDs [
 
 	storedRequestData := make(map[string]json.RawMessage, len(requestIDs))
 	storedImpressionData := make(map[string]json.RawMessage, len(impIDs))
-
 	if fetcher.storedRequestProvider != nil {
 		for _, uuid := range requestIDs {
 			storedRequest, err := fetcher.storedRequestProvider.GetStoredRequestObjectByUUID(uuid)
 			if err != nil {
-				glog.Infof("Failed to retrieve Stored Request object: %v", err)
 				return nil, nil, []error{err}
 			}
 
-			if err != nil {
-				glog.Infof("Failed to marshal Stored Request object: %v", err)
-				return nil, nil, []error{err}
-			}
 			storedRequestData[uuid] = json.RawMessage(storedRequest.Config)
 		}
 	}
@@ -77,14 +71,9 @@ func (fetcher *aerospikeFetcher) FetchRequests(ctx context.Context, requestIDs [
 		for _, uuid := range impIDs {
 			storedImpression, err := fetcher.storedImpressionProvider.GetStoredImpressionObjectByUUID(uuid)
 			if err != nil {
-				glog.Infof("Failed to retrieve Stored Impression object: %v", err)
 				return nil, nil, []error{err}
 			}
 
-			if err != nil {
-				glog.Infof("Failed to marshal Stored Impression object: %v", err)
-				return nil, nil, []error{err}
-			}
 			storedImpressionData[uuid] = json.RawMessage(storedImpression.Config)
 		}
 	}
@@ -104,7 +93,6 @@ func (fetcher *aerospikeFetcher) FetchAccount(ctx context.Context, accountID str
 	storedAccount, err := fetcher.storedAccountProvider.GetStoredAccountObjectByID(accountID)
 
 	if err != nil {
-		glog.Infof("Failed to retrieve stored account object: %v", err)
 		return nil, []error{err}
 	}
 
@@ -119,12 +107,6 @@ func (fetcher *aerospikeFetcher) FetchCategories(ctx context.Context, primaryAdS
 	primaryAdServerCategoryMapping, err := fetcher.primaryAdServerCategoryMappingProvider.GetPrimaryAdServerIabCategoryMappingObjectByMappingID(iabCategory, primaryAdServer, publisherId)
 
 	if err != nil {
-		glog.Infof("Failed to retrieve categories object: %v", err)
-		return "", err
-	}
-
-	if err != nil {
-		glog.Infof("Failed to marshal category mapping object: %v", err)
 		return "", err
 	}
 
