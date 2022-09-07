@@ -4,7 +4,7 @@ go 1.19
 
 replace gitlab.indexexchange.com/exchange-node/third-party/protobuf-go/protobuf => gitlab.indexexchange.com/exchange-node/third-party/protobuf-go.git v1.25.4
 
-replace gitlab.indexexchange.com/exchange-node/rules-lib => gitlab.indexexchange.com/exchange-node/rules-lib v1.280.0
+replace gitlab.indexexchange.com/exchange-node/rules-lib => gitlab.indexexchange.com/exchange-node/rules-lib v1.354.0
 
 require (
 	github.com/DATA-DOG/go-sqlmock v1.5.0

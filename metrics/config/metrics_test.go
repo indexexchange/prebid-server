@@ -85,6 +85,7 @@ func TestMultiMetricsEngine(t *testing.T) {
 		metricsEngine.RecordAdapterBidReceived(pubLabels, openrtb_ext.BidTypeBanner, true)
 		metricsEngine.RecordAdapterTime(pubLabels, time.Millisecond*20)
 		metricsEngine.RecordPrebidCacheRequestTime(true, time.Millisecond*20)
+		metricsEngine.RecordRequestVideoProxy(labels)
 	}
 	labelsBlacklist := []metrics.Labels{
 		{

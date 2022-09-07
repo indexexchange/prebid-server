@@ -96,6 +96,18 @@ func TestVideoEndpointImpressionsDuration(t *testing.T) {
 	assert.Equal(t, ex.lastRequest.Imp[17].Video.MinDuration, int64(30), "Incorrect impression min duration in request")
 }
 
+func TestVideoEndpointLogStatsUnmarshalError(t *testing.T) {
+	ex := &mockExchangeVideo{}
+	reqBody := readVideoTestFile(t, "sample-requests/video/video_invalid_sample_bad_stored_imp.json")
+	req := httptest.NewRequest("POST", "/openrtb2/video", strings.NewReader(reqBody))
+	recorder := httptest.NewRecorder()
+
+	deps := mockDeps(t, ex)
+	deps.VideoAuctionEndpoint(recorder, req, nil)
+
+	assert.Len(t, ex.lastRequest.Imp, 6)
+}
+
 func TestCreateBidExtension(t *testing.T) {
 	durationRange := make([]int, 0)
 	durationRange = append(durationRange, 15)
@@ -1448,9 +1460,10 @@ var mockVideoAccountData = map[string]json.RawMessage{
 }
 
 var testVideoStoredImpData = map[string]json.RawMessage{
-	"fba10607-0c12-43d1-ad07-b8a513bc75d6": json.RawMessage(`{"ext": {"appnexus": {"placementId": 14997137}}}`),
+	"fba10607-0c12-43d1-ad07-b8a513bc75d6": json.RawMessage(`{"ext": {"appnexus": {"placementId": 14997137},"ix": {"siteId": "12345"}}}`),
 	"8b452b41-2681-4a20-9086-6f16ffad7773": json.RawMessage(`{"ext": {"appnexus": {"placementId": 15016213}}}`),
 	"87d82a45-35c3-46cc-9315-2e3eeb91d0f2": json.RawMessage(`{"ext": {"appnexus": {"placementId": 15062775}}}`),
+	"testconfigid":                         json.RawMessage(`{"ext": {"ix": {"siteId": 12345}}}`),
 }
 
 var testVideoStoredRequestData = map[string]json.RawMessage{

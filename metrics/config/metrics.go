@@ -74,6 +74,12 @@ func (me *MultiMetricsEngine) RecordRequest(labels metrics.Labels) {
 	}
 }
 
+func (me *MultiMetricsEngine) RecordRequestVideoProxy(labels metrics.Labels) {
+	for _, thisME := range *me {
+		thisME.RecordRequestVideoProxy(labels)
+	}
+}
+
 func (me *MultiMetricsEngine) RecordConnectionAccept(success bool) {
 	for _, thisME := range *me {
 		thisME.RecordConnectionAccept(success)

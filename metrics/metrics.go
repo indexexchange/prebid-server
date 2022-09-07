@@ -13,6 +13,7 @@ type Labels struct {
 	PubID         string // exchange specific ID, so we cannot compile in values
 	CookieFlag    CookieFlag
 	RequestStatus RequestStatus
+	SiteID        string // IX siteid
 }
 
 // AdapterLabels defines the labels that can be attached to the adapter metrics.
@@ -133,6 +134,8 @@ type CacheResult string
 
 // PublisherUnknown : Default value for Labels.PubID
 const PublisherUnknown = "unknown"
+
+const SiteIDUnknown = "unknown"
 
 // The demand sources
 const (

@@ -78,7 +78,8 @@ type Metrics struct {
 	accountDebugRequests   *prometheus.CounterVec
 	accountStoredResponses *prometheus.CounterVec
 
-	metricsDisabled config.DisabledMetrics
+	metricsDisabled    config.DisabledMetrics
+	requestsVideoProxy *prometheus.CounterVec
 }
 
 const (
@@ -104,6 +105,8 @@ const (
 	successLabel         = "success"
 	syncerLabel          = "syncer"
 	versionLabel         = "version"
+	pubidLabel           = "pub_id"
+	siteidLabel          = "site_id"
 )
 
 const (
@@ -189,6 +192,11 @@ func NewMetrics(cfg config.PrometheusMetrics, disabledMetrics config.DisabledMet
 		"requests",
 		"Count of total requests to Prebid Server labeled by type and status.",
 		[]string{requestTypeLabel, requestStatusLabel})
+
+	metrics.requestsVideoProxy = newCounter(cfg, reg,
+		"requests_video_proxy",
+		"Count of requests from video proxy with PubID and SiteID",
+		[]string{requestTypeLabel, requestStatusLabel, pubidLabel, siteidLabel})
 
 	metrics.debugRequests = newCounterWithoutLabels(cfg, reg,
 		"debug_requests",
@@ -526,6 +534,17 @@ func (m *Metrics) RecordRequest(labels metrics.Labels) {
 	if labels.PubID != metrics.PublisherUnknown {
 		m.accountRequests.With(prometheus.Labels{
 			accountLabel: labels.PubID,
+		}).Inc()
+	}
+}
+
+func (m *Metrics) RecordRequestVideoProxy(labels metrics.Labels) {
+	if labels.PubID != metrics.PublisherUnknown && labels.SiteID != metrics.SiteIDUnknown {
+		m.requestsVideoProxy.With(prometheus.Labels{
+			requestTypeLabel:   string(labels.RType),
+			requestStatusLabel: string(labels.RequestStatus),
+			pubidLabel:         string(labels.PubID),
+			siteidLabel:        string(labels.SiteID),
 		}).Inc()
 	}
 }

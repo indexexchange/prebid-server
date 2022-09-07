@@ -35,6 +35,7 @@ import (
 	"github.com/prebid/prebid-server/util/iputil"
 	"github.com/prebid/prebid-server/util/uuidutil"
 	"github.com/prebid/prebid-server/version"
+	"gitlab.indexexchange.com/exchange-node/schema/openrtb"
 )
 
 var defaultRequestTimeout int64 = 5000
@@ -113,6 +114,7 @@ func NewVideoEndpoint(
 */
 func (deps *endpointDeps) VideoAuctionEndpoint(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	start := time.Now()
+	var bidReq = &openrtb2.BidRequest{}
 
 	vo := analytics.VideoObject{
 		Status:    http.StatusOK,
@@ -126,6 +128,7 @@ func (deps *endpointDeps) VideoAuctionEndpoint(w http.ResponseWriter, r *http.Re
 		PubID:         metrics.PublisherUnknown,
 		CookieFlag:    metrics.CookieFlagUnknown,
 		RequestStatus: metrics.RequestStatusOK,
+		SiteID:        metrics.SiteIDUnknown,
 	}
 
 	debugQuery := r.URL.Query().Get("debug")
@@ -149,8 +152,19 @@ func (deps *endpointDeps) VideoAuctionEndpoint(w http.ResponseWriter, r *http.Re
 				vo.Errors = append(vo.Errors, err)
 			}
 		}
+		impExt := &openrtb.ImpExt{}
+		if len(bidReq.Imp) > 0 {
+			err := json.Unmarshal(bidReq.Imp[0].Ext, &impExt)
+			if err != nil {
+				vo.Errors = append(vo.Errors, err)
+			}
+		}
+		if impExt.Ix != nil {
+			labels.SiteID = string(*impExt.Ix.SiteId)
+		}
 		deps.metricsEngine.RecordRequest(labels)
 		deps.metricsEngine.RecordRequestTime(labels, time.Since(start))
+		deps.metricsEngine.RecordRequestVideoProxy(labels)
 		deps.analytics.LogVideoObject(&vo)
 	}()
 
@@ -207,7 +221,6 @@ func (deps *endpointDeps) VideoAuctionEndpoint(w http.ResponseWriter, r *http.Re
 
 	vo.VideoRequest = videoBidReq
 
-	var bidReq = &openrtb2.BidRequest{}
 	if deps.defaultRequest {
 		if err := json.Unmarshal(deps.defReqJSON, bidReq); err != nil {
 			err = fmt.Errorf("Invalid JSON in Default Request Settings: %s", err)

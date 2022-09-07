@@ -156,6 +156,29 @@ func TestRequestMetric(t *testing.T) {
 		})
 }
 
+func TestRequestVideoProxyMetric(t *testing.T) {
+	m := createMetricsForTesting()
+	requestType := metrics.ReqTypeORTB2Web
+	requestStatus := metrics.RequestStatusBlacklisted
+
+	m.RecordRequestVideoProxy(metrics.Labels{
+		RType:         requestType,
+		RequestStatus: requestStatus,
+		PubID:         "12345",
+		SiteID:        "67890",
+	})
+
+	expectedCount := float64(1)
+	assertCounterVecValue(t, "", "requests", m.requestsVideoProxy,
+		expectedCount,
+		prometheus.Labels{
+			requestTypeLabel:   string(requestType),
+			requestStatusLabel: string(requestStatus),
+			pubidLabel:         "12345",
+			siteidLabel:        "67890",
+		})
+}
+
 func TestDebugRequestMetric(t *testing.T) {
 	testCases := []struct {
 		description                      string
