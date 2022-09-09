@@ -447,13 +447,13 @@ type FileLogs struct {
 	Filename string `mapstructure:"filename"`
 }
 
-//IXEvents Events Object Expected Structure
+// IXEvents Events Object Expected Structure
 type IXEvents struct {
 	Win bool `mapstructure:"win"`
 	Imp bool `mapstructure:"imp"`
 }
 
-//Expected Configuration Structure for IX Module
+// Expected Configuration Structure for IX Module
 type IX struct {
 	Enabled    bool                    `mapstructure:"enabled"`
 	Events     IXEvents                `mapstructure:"events"`

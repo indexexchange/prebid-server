@@ -6,10 +6,12 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"time"
 
 	"github.com/prebid/prebid-server/config"
 	"github.com/prebid/prebid-server/openrtb_ext"
 
+	"github.com/prebid/prebid-server/currency"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -271,4 +273,12 @@ func TestValidateDefaultAliases(t *testing.T) {
 			assert.EqualError(t, err, test.expectedError, test.description)
 		}
 	}
+}
+
+func TestRouterNew(t *testing.T) {
+	cfg := &config.Configuration{}
+	staleRatesThreshold := time.Duration(cfg.CurrencyConverter.StaleRatesSeconds) * time.Second
+	currencyConverter := currency.NewRateConverter(&http.Client{}, cfg.CurrencyConverter.FetchURL, staleRatesThreshold)
+	_, err := New(cfg, currencyConverter)
+	assert.NotNil(t, err)
 }

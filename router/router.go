@@ -118,6 +118,17 @@ func New(cfg *config.Configuration, rateConvertor *currency.RateConverter) (r *R
 		Router: httprouter.New(),
 	}
 
+	// Aerospike client
+	asConfig := aerospike.Config{
+		SeedHosts:      cfg.Aerospike.Hosts,
+		Port:           cfg.Aerospike.Port,
+		Namespace:      cfg.Aerospike.Namespace,
+		User:           cfg.Aerospike.User,
+		Password:       cfg.Aerospike.Password,
+		ConnectRetries: cfg.Aerospike.ConnectRetries,
+		Timeout:        cfg.Aerospike.Timeout,
+	}
+
 	// For bid processing, we need both the hardcoded certificates and the certificates found in container's
 	// local file system
 	certPool := ssl.GetRootCAPool()
@@ -169,18 +180,7 @@ func New(cfg *config.Configuration, rateConvertor *currency.RateConverter) (r *R
 	// Metrics engine
 	r.MetricsEngine = metricsConf.NewMetricsEngine(cfg, openrtb_ext.CoreBidderNames(), syncerKeys)
 
-	// Aerospike client
-	asConfig := aerospike.Config{
-		SeedHosts:      cfg.StoredRequests.Aerospike.Hosts,
-		Port:           cfg.StoredRequests.Aerospike.Port,
-		Namespace:      cfg.StoredRequests.Aerospike.Namespace,
-		User:           cfg.StoredRequests.Aerospike.User,
-		Password:       cfg.StoredRequests.Aerospike.Password,
-		ConnectRetries: cfg.StoredRequests.Aerospike.ConnectRetries,
-		Timeout:        cfg.StoredRequests.Aerospike.Timeout,
-	}
 	aerospikeClient, err := aerospike.NewClient(asConfig)
-
 	if err != nil {
 		glog.Infof("Failed to create aerospike client: %v", err)
 	}
