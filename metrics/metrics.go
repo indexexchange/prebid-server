@@ -432,4 +432,5 @@ type MetricsEngine interface {
 	RecordStoredResponse(pubId string)
 	RecordAdsCertReq(success bool)
 	RecordAdsCertSignTime(adsCertSignTime time.Duration)
+	RecordRequestVideoProxy(labels Labels)
 }

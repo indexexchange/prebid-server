@@ -4637,3 +4637,61 @@ func getIntegrationFromRequest(req *openrtb_ext.RequestWrapper) (string, error) 
 	reqPrebid := reqExt.GetPrebid()
 	return reqPrebid.Integration, nil
 }
+
+func TestLogVideoProxyStats(t *testing.T) {
+	deps := &endpointDeps{
+		fakeUUIDGenerator{},
+		&nobidExchange{},
+		mockBidderParamValidator{},
+		&mockStoredReqFetcher{},
+		empty_fetcher.EmptyFetcher{},
+		empty_fetcher.EmptyFetcher{},
+		&config.Configuration{MaxRequestSize: maxSize},
+		&metricsConfig.NilMetricsEngine{},
+		analyticsConf.NewPBSAnalytics(&config.Analytics{}),
+		map[string]string{},
+		false,
+		[]byte{},
+		openrtb_ext.BuildBidderMap(),
+		nil,
+		nil,
+		hardcodedResponseIPValidator{response: true},
+		empty_fetcher.EmptyFetcher{},
+	}
+
+	httpReq := httptest.NewRequest("POST", "/openrtb2/auction", strings.NewReader(validRequest(t, "site-ix.json")))
+	recorder := httptest.NewRecorder()
+
+	deps.Auction(recorder, httpReq, nil)
+
+	assert.Equal(t, 200, recorder.Code)
+}
+
+func TestLogVideoProxyStatsUnmarshalError(t *testing.T) {
+	deps := &endpointDeps{
+		fakeUUIDGenerator{},
+		&nobidExchange{},
+		mockBidderParamValidator{},
+		&mockStoredReqFetcher{},
+		empty_fetcher.EmptyFetcher{},
+		empty_fetcher.EmptyFetcher{},
+		&config.Configuration{MaxRequestSize: maxSize},
+		&metricsConfig.NilMetricsEngine{},
+		analyticsConf.NewPBSAnalytics(&config.Analytics{}),
+		map[string]string{},
+		false,
+		[]byte{},
+		openrtb_ext.BuildBidderMap(),
+		nil,
+		nil,
+		hardcodedResponseIPValidator{response: true},
+		empty_fetcher.EmptyFetcher{},
+	}
+
+	httpReq := httptest.NewRequest("POST", "/openrtb2/auction", strings.NewReader(validRequest(t, "site-ix-invalid.json")))
+	recorder := httptest.NewRecorder()
+
+	deps.Auction(recorder, httpReq, nil)
+
+	assert.Equal(t, 400, recorder.Code)
+}

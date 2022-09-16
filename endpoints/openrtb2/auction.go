@@ -143,10 +143,18 @@ func (deps *endpointDeps) Auction(w http.ResponseWriter, r *http.Request, _ http
 		PubID:         metrics.PublisherUnknown,
 		CookieFlag:    metrics.CookieFlagUnknown,
 		RequestStatus: metrics.RequestStatusOK,
+		SiteID:        metrics.SiteIDUnknown,
 	}
+
+	impExt := &openrtb.ImpExt{}
+
 	defer func() {
+		if impExt.Ix != nil {
+			labels.SiteID = string(*impExt.Ix.SiteId)
+		}
 		deps.metricsEngine.RecordRequest(labels)
 		deps.metricsEngine.RecordRequestTime(labels, time.Since(start))
+		deps.metricsEngine.RecordRequestVideoProxy(labels)
 		deps.analytics.LogAuctionObject(&ao)
 	}()
 
@@ -155,6 +163,14 @@ func (deps *endpointDeps) Auction(w http.ResponseWriter, r *http.Request, _ http
 	req, impExtInfoMap, storedAuctionResponses, storedBidResponses, bidderImpReplaceImp, errL := deps.parseRequest(r)
 	if errortypes.ContainsFatalError(errL) && writeError(errL, w, &labels) {
 		return
+	}
+
+	if len(req.BidRequest.Imp) > 0 {
+		err := json.Unmarshal(req.BidRequest.Imp[0].Ext, &impExt)
+		if err != nil {
+			errL = append(errL, err)
+			writeError(errL, w, &labels)
+		}
 	}
 
 	ctx := context.Background()

@@ -781,3 +781,6 @@ func (me *Metrics) RecordAdsCertReq(success bool) {
 func (me *Metrics) RecordAdsCertSignTime(adsCertSignTime time.Duration) {
 	me.adsCertSignTimer.Update(adsCertSignTime)
 }
+
+func (me *Metrics) RecordRequestVideoProxy(labels Labels) {
+}

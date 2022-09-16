@@ -411,3 +411,7 @@ func (me *NilMetricsEngine) RecordAdsCertReq(success bool) {
 func (me *NilMetricsEngine) RecordAdsCertSignTime(adsCertSignTime time.Duration) {
 
 }
+
+// RecordVideoProxyRequest as a noop
+func (me *NilMetricsEngine) RecordRequestVideoProxy(labels metrics.Labels) {
+}

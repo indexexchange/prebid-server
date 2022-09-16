@@ -17,6 +17,11 @@ func (me *MetricsEngineMock) RecordRequest(labels Labels) {
 	me.Called(labels)
 }
 
+// RecordRequest mock
+func (me *MetricsEngineMock) RecordRequestVideoProxy(labels Labels) {
+	me.Called(labels)
+}
+
 // RecordConnectionAccept mock
 func (me *MetricsEngineMock) RecordConnectionAccept(success bool) {
 	me.Called(success)

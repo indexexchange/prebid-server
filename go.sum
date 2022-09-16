@@ -612,13 +612,14 @@ github.com/yuin/goldmark v1.2.1/go.mod h1:3hX8gzYuyVAZsxl0MRgGTJEmQBFcNTphYh9dec
 github.com/yuin/goldmark v1.3.5/go.mod h1:mwnBkeHKe2W/ZEtQ+71ViKU8L12m81fl3OWwC1Zlc8k=
 github.com/yuin/gopher-lua v0.0.0-20200816102855-ee81675732da h1:NimzV1aGyq29m5ukMK0AMWEhFaL/lrEOaephfuoiARg=
 github.com/yuin/gopher-lua v0.0.0-20200816102855-ee81675732da/go.mod h1:E1AXubJBdNmFERAOucpDIxNzeGfLzg0mYh+UfMWdChA=
-gitlab.indexexchange.com/exchange-blocks/schema v1.6.0 h1:hP+Q3fhHFcZpQcfki2A7lqrPW/Ql2LnmFXj38t+n5IM=
 gitlab.indexexchange.com/exchange-blocks/schema v1.6.0/go.mod h1:dhQe7b9OiApvZI9Si02r47l76ybdL8CTHIsUAlDACkU=
+gitlab.indexexchange.com/exchange-blocks/schema v1.7.0 h1:YIEA1fK4wZU7mQ/yM8jv9QO36bkUHeFBYHoyMz+k3ro=
+gitlab.indexexchange.com/exchange-blocks/schema v1.7.0/go.mod h1:dhQe7b9OiApvZI9Si02r47l76ybdL8CTHIsUAlDACkU=
 gitlab.indexexchange.com/exchange-node/rules-lib v1.354.0 h1:JVlFBrFxenc+AQIEKydtjmOh5Z/Ns/xPkcZOP8AVPlQ=
 gitlab.indexexchange.com/exchange-node/rules-lib v1.354.0/go.mod h1:XUsxExwsPZ29dtlKzUdhtcNDIdUv1v/HMgOBOKOMYRU=
 gitlab.indexexchange.com/exchange-node/schema v1.565.0/go.mod h1:XVDg8/hEBhYKsSCPPlBOJaQwHpaiD6tDr3vQtWVs2ZE=
-gitlab.indexexchange.com/exchange-node/schema v1.568.0 h1:5TdSMotUvjkrwq+DXuWBq7RUPjgZp9ST4DCeo/Qxe1k=
-gitlab.indexexchange.com/exchange-node/schema v1.568.0/go.mod h1:XVDg8/hEBhYKsSCPPlBOJaQwHpaiD6tDr3vQtWVs2ZE=
+gitlab.indexexchange.com/exchange-node/schema v1.584.0 h1:S6YJ1/GpYYEJ/xFzLMcrgpdjq/tJ+U4GmTmpFiG+Mhw=
+gitlab.indexexchange.com/exchange-node/schema v1.584.0/go.mod h1:+ydqPoNKAjSrTiEvKvrIEuUtUfRJqj02ThVnfMmHaxc=
 gitlab.indexexchange.com/exchange-node/telemetry v0.26.0 h1:Pd3zoZQ7WnFbOJkyZn1mlVcAIBz6IhlU8D7Y+d9Tnd4=
 gitlab.indexexchange.com/exchange-node/telemetry v0.26.0/go.mod h1:HxN828VDMXh5u8aPYrpJ6rog9cdDhIYnpO21YtVCAJI=
 gitlab.indexexchange.com/exchange-node/third-party/protobuf-go.git v1.25.4 h1:siCKUZ5RnB1YgkKYtHZJ8M8oIU281Kh3mh3/Zg+IkGo=
