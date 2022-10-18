@@ -180,9 +180,12 @@ func New(cfg *config.Configuration, rateConvertor *currency.RateConverter) (r *R
 	// Metrics engine
 	r.MetricsEngine = metricsConf.NewMetricsEngine(cfg, openrtb_ext.CoreBidderNames(), syncerKeys)
 
-	aerospikeClient, err := aerospike.NewClient(asConfig)
-	if err != nil {
-		glog.Infof("Failed to create aerospike client: %v", err)
+	var aerospikeClient *aerospike.Client
+	if cfg.Aerospike.Enabled {
+		aerospikeClient, err = aerospike.NewClient(asConfig)
+		if err != nil {
+			glog.Infof("Failed to create aerospike client: %v", err)
+		}
 	}
 
 	shutdown, fetcher, ampFetcher, accounts, categoriesFetcher, videoFetcher, storedRespFetcher := storedRequestsConf.NewStoredRequests(cfg, r.MetricsEngine, generalHttpClient, r.Router, aerospikeClient)

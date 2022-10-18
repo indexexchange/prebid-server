@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"testing"
 	"time"
 
@@ -276,9 +277,19 @@ func TestValidateDefaultAliases(t *testing.T) {
 }
 
 func TestRouterNew(t *testing.T) {
+	os.MkdirAll("static/bidder-params", os.ModePerm)
 	cfg := &config.Configuration{}
 	staleRatesThreshold := time.Duration(cfg.CurrencyConverter.StaleRatesSeconds) * time.Second
 	currencyConverter := currency.NewRateConverter(&http.Client{}, cfg.CurrencyConverter.FetchURL, staleRatesThreshold)
 	_, err := New(cfg, currencyConverter)
-	assert.NotNil(t, err)
+	assert.Nil(t, err)
+}
+
+func TestRouterNewAerospike(t *testing.T) {
+	os.MkdirAll("static/bidder-params", os.ModePerm)
+	cfg := &config.Configuration{Aerospike: config.AerospikeConnection{Enabled: true, Timeout: 1}}
+	staleRatesThreshold := time.Duration(cfg.CurrencyConverter.StaleRatesSeconds) * time.Second
+	currencyConverter := currency.NewRateConverter(&http.Client{}, cfg.CurrencyConverter.FetchURL, staleRatesThreshold)
+	_, err := New(cfg, currencyConverter)
+	assert.Nil(t, err)
 }

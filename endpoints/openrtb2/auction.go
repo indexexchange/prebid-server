@@ -21,6 +21,7 @@ import (
 	"github.com/prebid/openrtb/v17/native1"
 	nativeRequests "github.com/prebid/openrtb/v17/native1/request"
 	"github.com/prebid/openrtb/v17/openrtb2"
+	"gitlab.indexexchange.com/exchange-node/schema/protobuf-go/openrtb"
 	"golang.org/x/net/publicsuffix"
 	jsonpatch "gopkg.in/evanphx/json-patch.v4"
 

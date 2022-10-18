@@ -100,6 +100,8 @@ type Configuration struct {
 	// BidderInfos supports adapter overrides in extra configs like pbs.json, pbs.yaml, etc.
 	// Refers to main.go `configFileName` constant
 	BidderInfos BidderInfos `mapstructure:"adapters"`
+	//Aerospike configuration for aerospike fetcher
+	Aerospike AerospikeConnection `mapstructure:"aerospike"`
 }
 
 const MIN_COOKIE_SIZE_BYTES = 500
