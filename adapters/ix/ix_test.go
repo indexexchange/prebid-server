@@ -2,6 +2,7 @@ package ix
 
 import (
 	"encoding/json"
+	"github.com/stretchr/testify/assert"
 	"testing"
 
 	"github.com/prebid/prebid-server/adapters"
@@ -100,4 +101,32 @@ func TestIxMakeBidsWithCategoryDuration(t *testing.T) {
 	if len(errors) != expectedErrorCount {
 		t.Errorf("should not have any errors, errors=%v", errors)
 	}
+}
+
+func TestIxMakeBidsWithInvalidJson(t *testing.T) {
+	bidder := &IxAdapter{}
+	bidder.maxRequests = 1
+
+	mockedReq := &openrtb2.BidRequest{
+		Imp: []openrtb2.Imp{{
+			ID:     "1_1",
+			Banner: &openrtb2.Banner{},
+			Ext: json.RawMessage(
+				`{
+					"bidder": {
+						"siteID": "123456"
+					}
+				}`,
+			)},
+		},
+		Ext: json.RawMessage(
+			`X-invalidValueForJsonField`,
+		),
+	}
+
+	actualAdapterRequests, errs := bidder.MakeRequests(mockedReq, &adapters.ExtraRequestInfo{})
+
+	assert.Len(t, errs, 1)
+	assert.EqualError(t, errs[0], "json: error calling MarshalJSON for type json.RawMessage: invalid character 'X' looking for beginning of value")
+	assert.Len(t, actualAdapterRequests, 0)
 }

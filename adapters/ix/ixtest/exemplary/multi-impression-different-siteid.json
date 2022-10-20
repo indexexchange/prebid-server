@@ -43,23 +43,7 @@
                 },
                 "ext": {
                     "bidder": {
-                        "siteId": "569749"
-                    }
-                }
-            },
-            {
-                "id": "test-imp-id-3",
-                "banner": {
-                    "format": [
-                        {
-                            "w": 300,
-                            "h": 600
-                        }
-                    ]
-                },
-                "ext": {
-                    "bidder": {
-                        "siteId": "569749"
+                        "siteId": "569750"
                     }
                 }
             }
@@ -113,7 +97,7 @@
                             },
                             "ext": {
                                 "bidder": {
-                                    "siteId": "569749"
+                                    "siteId": "569750"
                                 }
                             }
                         }

@@ -1,8 +1,10 @@
 package ix
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
+	"github.com/golang/glog"
 	"net/http"
 	"sort"
 	"strings"
@@ -28,64 +30,14 @@ func (a *IxAdapter) MakeRequests(request *openrtb2.BidRequest, reqInfo *adapters
 		request.Imp = request.Imp[:a.maxRequests]
 		nImp = a.maxRequests
 	}
-
-	// Multi-size banner imps are split into single-size requests.
-	// The first size imp requests are added to the first slice.
-	// Additional size requests are added to the second slice and are merged with the first at the end.
-	// Preallocate the max possible size to avoid reallocating arrays.
 	requests := make([]*adapters.RequestData, 0, a.maxRequests)
-	multiSizeRequests := make([]*adapters.RequestData, 0, a.maxRequests-nImp)
-	errs := make([]error, 0, 1)
+	errs := make([]error, 0)
 
 	headers := http.Header{
 		"Content-Type": {"application/json;charset=utf-8"},
 		"Accept":       {"application/json"}}
 
-	imps := request.Imp
-	for iImp := range imps {
-		request.Imp = imps[iImp : iImp+1]
-		if request.Site != nil {
-			if err := setSitePublisherId(request, iImp); err != nil {
-				errs = append(errs, err)
-				continue
-			}
-		}
-
-		if request.Imp[0].Banner != nil {
-			banner := *request.Imp[0].Banner
-			request.Imp[0].Banner = &banner
-			formats := getBannerFormats(&banner)
-			for iFmt := range formats {
-				banner.Format = formats[iFmt : iFmt+1]
-				banner.W = openrtb2.Int64Ptr(banner.Format[0].W)
-				banner.H = openrtb2.Int64Ptr(banner.Format[0].H)
-				if requestData, err := createRequestData(a, request, &headers); err == nil {
-					if iFmt == 0 {
-						requests = append(requests, requestData)
-					} else {
-						multiSizeRequests = append(multiSizeRequests, requestData)
-					}
-				} else {
-					errs = append(errs, err)
-				}
-				if len(multiSizeRequests) == cap(multiSizeRequests) {
-					break
-				}
-			}
-		} else if requestData, err := createRequestData(a, request, &headers); err == nil {
-			requests = append(requests, requestData)
-		} else {
-			errs = append(errs, err)
-		}
-	}
-	request.Imp = imps
-
-	return append(requests, multiSizeRequests...), errs
-}
-
-func setSitePublisherId(request *openrtb2.BidRequest, iImp int) error {
-	if iImp == 0 {
-		// first impression - create a site and pub copy
+	if request.Site != nil {
 		site := *request.Site
 		if site.Publisher == nil {
 			site.Publisher = &openrtb2.Publisher{}
@@ -96,8 +48,57 @@ func setSitePublisherId(request *openrtb2.BidRequest, iImp int) error {
 		request.Site = &site
 	}
 
+	siteIds := make(map[string]bool)
+	sanitizedImps := make([]openrtb2.Imp, 0, len(request.Imp))
+	for _, imp := range request.Imp {
+		if err := parseSiteId(&imp, siteIds); err != nil {
+			errs = append(errs, err)
+			continue
+		}
+
+		if imp.Banner != nil {
+			banner := *imp.Banner
+			imp.Banner = &banner
+
+			if len(banner.Format) == 0 && banner.W != nil && banner.H != nil {
+				banner.Format = []openrtb2.Format{{W: *banner.W, H: *banner.H}}
+			}
+
+			if len(banner.Format) == 1 {
+				banner.W = openrtb2.Int64Ptr(banner.Format[0].W)
+				banner.H = openrtb2.Int64Ptr(banner.Format[0].H)
+			}
+		}
+		sanitizedImps = append(sanitizedImps, imp)
+	}
+	if request.Site != nil && len(siteIds) == 1 {
+		for siteId, _ := range siteIds {
+			request.Site.Publisher.ID = siteId
+		}
+	}
+	if len(siteIds) > 1 {
+		var siteIdStringBuffer bytes.Buffer
+		for siteId, _ := range siteIds {
+			siteIdStringBuffer.WriteString(siteId)
+			siteIdStringBuffer.WriteString(", ")
+		}
+		glog.Warningf("Multiple SiteIDs found. %s", siteIdStringBuffer.String())
+	}
+
+	request.Imp = sanitizedImps
+	if len(request.Imp) != 0 {
+		if requestData, err := createRequestData(a, request, &headers); err == nil {
+			requests = append(requests, requestData)
+		} else {
+			errs = append(errs, err)
+		}
+	}
+	return requests, errs
+}
+
+func parseSiteId(imp *openrtb2.Imp, siteIds map[string]bool) error {
 	var bidderExt adapters.ExtImpBidder
-	if err := json.Unmarshal(request.Imp[0].Ext, &bidderExt); err != nil {
+	if err := json.Unmarshal(imp.Ext, &bidderExt); err != nil {
 		return err
 	}
 
@@ -106,15 +107,10 @@ func setSitePublisherId(request *openrtb2.BidRequest, iImp int) error {
 		return err
 	}
 
-	request.Site.Publisher.ID = ixExt.SiteId
-	return nil
-}
-
-func getBannerFormats(banner *openrtb2.Banner) []openrtb2.Format {
-	if len(banner.Format) == 0 && banner.W != nil && banner.H != nil {
-		banner.Format = []openrtb2.Format{{W: *banner.W, H: *banner.H}}
+	if ixExt.SiteId != "" {
+		siteIds[ixExt.SiteId] = true
 	}
-	return banner.Format
+	return nil
 }
 
 func createRequestData(a *IxAdapter, request *openrtb2.BidRequest, headers *http.Header) (*adapters.RequestData, error) {
