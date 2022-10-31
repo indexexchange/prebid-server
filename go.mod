@@ -42,7 +42,7 @@ require (
 )
 
 require (
-	gitlab.indexexchange.com/exchange-node/rules-lib v1.382.0
+	gitlab.indexexchange.com/exchange-node/rules-lib v1.390.0
 	gitlab.indexexchange.com/exchange-node/schema v1.608.0
 )
 
