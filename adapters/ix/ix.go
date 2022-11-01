@@ -29,7 +29,7 @@ func (a *IxAdapter) MakeRequests(request *openrtb2.BidRequest, reqInfo *adapters
 	if stringData, err := json.Marshal(request); err == nil {
 		glog.Infof("Incoming Request to PBS: RequestID=%s, Request=%s", request.ID, stringData)
 	} else {
-		glog.Errorf("Error marshalling request to PBS", err)
+		glog.Errorf("Error marshalling request to PBS: %v", err)
 	}
 	if nImp > a.maxRequests {
 		request.Imp = request.Imp[:a.maxRequests]
@@ -129,16 +129,12 @@ func createRequestData(a *IxAdapter, request *openrtb2.BidRequest, headers *http
 }
 
 func (a *IxAdapter) MakeBids(internalRequest *openrtb2.BidRequest, externalRequest *adapters.RequestData, response *adapters.ResponseData) (*adapters.BidderResponse, []error) {
-	if stringData, err := json.Marshal(externalRequest); err == nil {
-		glog.Infof("External Request to Exchange: RequestID=%s, Request=%s", internalRequest.ID, stringData)
-	} else {
-		glog.Errorf("Error marshalling externalRequest to Exchange", err)
-	}
-	if stringData, err := json.Marshal(response); err == nil {
-		glog.Infof("Response from Exchange: RequestID=%s, ResponseData=%s", internalRequest.ID, stringData)
-	} else {
-		glog.Errorf("Error marshalling response from Exchange", err)
-	}
+	requestStringData, requestMarshalErr := json.Marshal(externalRequest)
+	glog.Infof("External Request to Exchange: RequestID=%s, Request=%s MarshalError=%v", internalRequest.ID, requestStringData, requestMarshalErr)
+
+	responseStringData, responseMarshalErr := json.Marshal(response)
+	glog.Infof("Response from Exchange: RequestID=%s, ResponseData=%s MarshalError=%v", internalRequest.ID, responseStringData, responseMarshalErr)
+
 	switch {
 	case response.StatusCode == http.StatusNoContent:
 		return nil, nil
