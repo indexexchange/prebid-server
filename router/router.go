@@ -184,8 +184,10 @@ func New(cfg *config.Configuration, rateConvertor *currency.RateConverter) (r *R
 	if cfg.Aerospike.Enabled {
 		aerospikeClient, err = aerospike.NewClient(asConfig)
 		if err != nil {
-			glog.Infof("Failed to create aerospike client: %v", err)
+			glog.Errorf("Failed to create aerospike client: %v", err)
 		}
+	} else {
+		glog.Error("Aerospike is not enable. Check config.")
 	}
 
 	shutdown, fetcher, ampFetcher, accounts, categoriesFetcher, videoFetcher, storedRespFetcher := storedRequestsConf.NewStoredRequests(cfg, r.MetricsEngine, generalHttpClient, r.Router, aerospikeClient)
