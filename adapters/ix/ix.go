@@ -26,11 +26,7 @@ type IxAdapter struct {
 
 func (a *IxAdapter) MakeRequests(request *openrtb2.BidRequest, reqInfo *adapters.ExtraRequestInfo) ([]*adapters.RequestData, []error) {
 	nImp := len(request.Imp)
-	if stringData, err := json.Marshal(request); err == nil {
-		glog.Infof("Incoming Request to PBS: RequestID=%s, Request=%s", request.ID, stringData)
-	} else {
-		glog.Errorf("Error marshalling request to PBS: %v", err)
-	}
+	glog.Infof("Incoming Request to PBS: RequestID=%s, NumberOfImp=%d", request.ID, nImp)
 	if nImp > a.maxRequests {
 		request.Imp = request.Imp[:a.maxRequests]
 		nImp = a.maxRequests
@@ -129,12 +125,6 @@ func createRequestData(a *IxAdapter, request *openrtb2.BidRequest, headers *http
 }
 
 func (a *IxAdapter) MakeBids(internalRequest *openrtb2.BidRequest, externalRequest *adapters.RequestData, response *adapters.ResponseData) (*adapters.BidderResponse, []error) {
-	requestStringData, requestMarshalErr := json.Marshal(externalRequest)
-	glog.Infof("External Request to Exchange: RequestID=%s, Request=%s MarshalError=%v", internalRequest.ID, requestStringData, requestMarshalErr)
-
-	responseStringData, responseMarshalErr := json.Marshal(response)
-	glog.Infof("Response from Exchange: RequestID=%s, ResponseData=%s MarshalError=%v", internalRequest.ID, responseStringData, responseMarshalErr)
-
 	switch {
 	case response.StatusCode == http.StatusNoContent:
 		return nil, nil
@@ -229,7 +219,7 @@ func (a *IxAdapter) MakeBids(internalRequest *openrtb2.BidRequest, externalReque
 		}
 	}
 
-	glog.Infof("Returning Bid Response: RequestID=%s, Length of Bids=%d", internalRequest.ID, len(bidderResponse.Bids))
+	glog.Infof("Returning Bid Response: RequestID=%s, NumberOfImp=%d, NumberOfBids=%d", internalRequest.ID, len(internalRequest.Imp), len(bidderResponse.Bids))
 	return bidderResponse, errs
 }
 
