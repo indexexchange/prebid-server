@@ -26,7 +26,6 @@ type IxAdapter struct {
 
 func (a *IxAdapter) MakeRequests(request *openrtb2.BidRequest, reqInfo *adapters.ExtraRequestInfo) ([]*adapters.RequestData, []error) {
 	nImp := len(request.Imp)
-	glog.Infof("Incoming Request to PBS: RequestID=%s, NumberOfImp=%d", request.ID, nImp)
 	if nImp > a.maxRequests {
 		request.Imp = request.Imp[:a.maxRequests]
 		nImp = a.maxRequests
